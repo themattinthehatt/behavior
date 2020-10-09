@@ -3,6 +3,8 @@ import glob
 import numpy as np
 import copy
 
+from behavior.paths import DATA_PATH
+
 
 class Markers(object):
 
@@ -13,10 +15,9 @@ class Markers(object):
             verbose:
             algo (str): 'dlc' | 'dgp'
         """
-        from flygenvectors.utils import get_dirs
 
         self.expt_id = expt_id
-        self.base_data_dir = get_dirs()['data']
+        self.base_data_dir = DATA_PATH
         self.algo = algo
 
         self.markers = {'x': [], 'y': [], 'l': []}
@@ -44,9 +45,7 @@ class Markers(object):
                     os.path.join(self.base_data_dir, self.expt_id, '*DeepCut*.csv'))[0]
             elif self.algo == 'dgp':
                 filename = os.path.join(
-                    self.base_data_dir, 'behavior', 'labels',
-                    'resnet-50_ws=%1.1e_wt=%1.1e' % (0, 0),
-                    self.expt_id + '_labeled.csv')
+                    self.base_data_dir, 'labels', self.expt_id + '_labeled.csv')
             else:
                 raise NotImplementedError
         if self.verbose:
@@ -66,9 +65,7 @@ class Markers(object):
 
         if filename is None:
             filename = os.path.join(
-                self.base_data_dir, 'behavior', 'labels',
-                'resnet-50_ws=%1.1e_wt=%1.1e' % (0, 0),
-                self.expt_id + '_labeled.h5')
+                self.base_data_dir, 'labels', self.expt_id + '_labeled.h5')
 
         if self.verbose:
             print('loading markers from %s...' % filename, end='')
@@ -239,14 +236,14 @@ def split_runs(indxs, dtypes, dtype_lens):
 
 
 def preprocess_and_split_data(
-        expt_ids, preprocess_list, max_trial_len=1000, algo='dgp', load_from='pkl',
+        expt_ids, preprocess_list, max_trial_len=1000, algo='dgp', load_from='h5',
         dtypes=['train', 'test', 'val'], dtype_lens=[8, 1, 1]):
     """Helper function to initialize marker object."""
 
     if not isinstance(expt_ids, list):
         expt_ids = [expt_ids]
 
-    marker_obj = [Labels(expt_id, algo=algo) for expt_id in expt_ids]
+    marker_obj = [Markers(expt_id, algo=algo) for expt_id in expt_ids]
 
     for n in range(len(marker_obj)):
 
@@ -278,3 +275,51 @@ def shuffle_data(marker_objs, dtype):
         trial_counters[sess] += 1
 
     return data, sess_order, trial_order
+
+
+def load_video(expt_id, base_data_dir=None):
+    """
+    Helper function to load videos
+
+    Args:
+        expt_id (str):
+        base_data_dir (str):
+
+    Returns:
+        np array (T x y_pix x x_pix)
+    """
+
+    import cv2
+
+    if base_data_dir is None:
+        base_data_dir = DATA_PATH
+
+    file_path = os.path.join(base_data_dir, 'videos_cropped', '%s.avi' % expt_id)
+
+    # read file
+    cap = cv2.VideoCapture(file_path)
+
+    # Check if file opened successfully
+    if not cap.isOpened():
+        print('Error opening video stream or file')
+
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    videodata = np.zeros((total_frames, height, width), dtype='uint8')
+
+    # read until video is completed
+    fr = 0
+    while cap.isOpened():
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+        if ret:
+            videodata[fr, :, :] = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            fr += 1
+        else:
+            break
+
+    # When everything done, release the video capture object
+    cap.release()
+
+    return videodata

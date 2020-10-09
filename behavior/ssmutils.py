@@ -5,6 +5,8 @@ from ssm import HMM
 from ssm.messages import forward_pass
 from scipy.special import logsumexp
 from sklearn.metrics import r2_score
+
+from behavior.paths import RESULTS_PATH
 from behavior.utils import get_subdirs
 
 
@@ -544,11 +546,7 @@ def fit_em(
         transitions='stationary', num_restarts=5, num_iters=100, method='em', cond_var_A=1e-3,
         rate=0.8):
 
-    from flygenvectors.utils import get_dirs
-
     hierarchical = obs.find('hierarchical') > -1
-
-    dirs = get_dirs()
 
     models = {}
     lps_tr = {}
@@ -564,18 +562,18 @@ def fit_em(
 
     for it in init_types:
 
-        expt_dir = get_expt_dir(dirs['results'], expt_ids)
+        expt_dir = get_expt_dir(RESULTS_PATH, expt_ids)
         if hierarchical and method == 'em':
             save_path = os.path.join(
-                dirs['results'], expt_dir, 'multi-session_%s-init_bem_condA=%1.1e' % (
+                RESULTS_PATH, expt_dir, 'multi-session_%s-init_bem_condA=%1.1e' % (
                     it, cond_var_A))
         elif hierarchical and method == 'stochastic_em_conj':
             save_path = os.path.join(
-                dirs['results'], expt_dir, 'multi-session_%s-init_sem_rate=%1.2f_condA=%1.1e' % (
+                RESULTS_PATH, expt_dir, 'multi-session_%s-init_sem_rate=%1.2f_condA=%1.1e' % (
                     it, rate, cond_var_A))
         else:
             save_path = os.path.join(
-                dirs['results'], expt_dir, 'multi-session_%s-init_%s' % (it, method))
+                RESULTS_PATH, expt_dir, 'multi-session_%s-init_%s' % (it, method))
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
@@ -932,16 +930,14 @@ def test_k_step_r2():
 # -------------------------------------------------------------------------------------------------
 
 def get_save_file(n_states, model_kwargs, fit_kwargs):
-    from flygenvectors.utils import get_dirs
     model_name = get_model_name(n_states, model_kwargs)
     model_name += '.pkl'
     if fit_kwargs['save_dir'] is not None:
         save_dir = fit_kwargs['save_dir']
     else:
-        base_dir = get_dirs()['results']
         model_dir = fit_kwargs['model_dir']
-        expt_dir = get_expt_dir(base_dir, fit_kwargs['expt_id'])
-        save_dir = os.path.join(base_dir, expt_dir, model_dir)
+        expt_dir = get_expt_dir(RESULTS_PATH, fit_kwargs['expt_id'])
+        save_dir = os.path.join(RESULTS_PATH, expt_dir, model_dir)
     return os.path.join(save_dir, model_name)
 
 
