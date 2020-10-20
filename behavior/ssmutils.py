@@ -91,7 +91,7 @@ def fit_with_random_restarts(
         np.random.seed(r)
         # build model file
         model_kwargs = {
-            'transitions': 'ar' if transitions == 'stationary' else transitions,  # dumb bug
+            'transitions': transitions,
             'observations': obs,
             'observation_kwargs': {'lags': lags},
         }
@@ -111,10 +111,14 @@ def fit_with_random_restarts(
                 observation_kwargs['cond_variance_V'] = cond_var_V
                 observation_kwargs['cond_variance_b'] = cond_var_b
                 observation_kwargs['cond_dof_Sigma'] = 10
+            if transitions.find('hierarchical') > -1:
+                transition_kwargs = {'tags': np.unique(tags)}
+            else:
+                transition_kwargs = None
             model = HMM(
                 K, D,
                 observations=obs, observation_kwargs=observation_kwargs,
-                transitions=transitions, transition_kwargs=dict(tags=np.unique(tags)))
+                transitions=transitions, transition_kwargs=transition_kwargs)
             init_model(init_type, model, datas, dist_mat=dist_mat)
             lps = model.fit(
                 datas, tags=tags, method=method, tolerance=tolerance,
