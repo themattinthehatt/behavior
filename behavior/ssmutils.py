@@ -105,12 +105,13 @@ def fit_with_random_restarts(
             model = results['model']
             lps = results['lps']
         else:
-            observation_kwargs = dict(lags=lags, tags=np.unique(tags))
+            observation_kwargs = dict(lags=lags)
             if obs.find('hierarchical') > -1:
                 observation_kwargs['cond_variance_A'] = cond_var_A
                 observation_kwargs['cond_variance_V'] = cond_var_V
                 observation_kwargs['cond_variance_b'] = cond_var_b
                 observation_kwargs['cond_dof_Sigma'] = 10
+                observation_kwargs['tags'] = np.unique(tags)
             if transitions.find('hierarchical') > -1:
                 transition_kwargs = {'tags': np.unique(tags)}
             else:
