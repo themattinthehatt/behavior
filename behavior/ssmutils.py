@@ -1062,13 +1062,13 @@ def export_session_info_to_csv(session_dir, ids_list):
             session_writer.writerow(ids)
 
 
-def get_all_labeled_expts(labels_dir):
-    labels_files = sorted(os.listdir(labels_dir))
+def get_all_tracked_expts(markers_dir):
+    markers_files = sorted(os.listdir(markers_dir))
     expt_names = []
-    for labels_file in labels_files:
-        if labels_file[-1] == '5':
+    for markers_file in markers_files:
+        if markers_file[-1] == '5':
             continue
-        csv_file = os.path.join(labels_dir, labels_file)
+        csv_file = os.path.join(markers_dir, markers_file)
         expt_names.append(get_expt_name_from_csv(csv_file))
     return expt_names
 

@@ -45,7 +45,7 @@ class Markers(object):
                     os.path.join(self.base_data_dir, self.expt_id, '*DeepCut*.csv'))[0]
             elif self.algo == 'dgp':
                 filename = os.path.join(
-                    self.base_data_dir, 'labels', self.expt_id + '_labeled.csv')
+                    self.base_data_dir, 'markers', self.expt_id + '_labeled.csv')
             else:
                 raise NotImplementedError
         if self.verbose:
@@ -65,7 +65,7 @@ class Markers(object):
 
         if filename is None:
             filename = os.path.join(
-                self.base_data_dir, 'labels', self.expt_id + '_labeled.h5')
+                self.base_data_dir, 'markers', self.expt_id + '_labeled.h5')
 
         if self.verbose:
             print('loading markers from %s...' % filename, end='')
